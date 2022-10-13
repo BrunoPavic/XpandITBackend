@@ -5,6 +5,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,11 +20,14 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 
 import static org.mockito.ArgumentMatchers.any;
 
 import com.xpandit.challenge.Util.MovieUtil;
 import com.xpandit.challenge.dto.MovieDetailsDto;
+import com.xpandit.challenge.dto.MovieDto;
 import com.xpandit.challenge.dto.NewMovieDto;
 import com.xpandit.challenge.entity.Movie;
 import com.xpandit.challenge.exception.MovieNotFoudException;
@@ -44,6 +50,20 @@ public class MovieServiceImplTest {
 	
 	@InjectMocks
 	private MovieServiceImpl movieService;
+	
+	@Test
+	public void getAll() {
+		Movie movie = MovieUtil.createMovie();
+		List<Movie> movieList = new ArrayList(List.of(movie));
+		Page<Movie> moviePage = new PageImpl<>(movieList);
+		
+		when(movieRepository.findByDateBetweenOrderByRatingDescDateAscRevenueDesc(any(), any(), any())).thenReturn(moviePage);
+		
+		Page<MovieDto> moviePageResult = movieService.getAllMovies(null, null, null, null);
+		moviePageResult = movieService.getAllMovies(0, 10, LocalDate.of(2020, 10, 10), LocalDate.of(2000, 10, 10));
+
+		verify(movieRepository, times(2)).findByDateBetweenOrderByRatingDescDateAscRevenueDesc(any(), any(), any());		
+	}
 	
 	@Test
 	public void findByID() {
